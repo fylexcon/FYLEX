@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+.expo/
+.turbo/
+.cache/
+.env
+.env.*
+!.env.example
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+coverage/
+*.tsbuildinfo
+android/
+ios/
