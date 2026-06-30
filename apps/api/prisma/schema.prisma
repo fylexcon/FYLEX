@@ -1,0 +1,425 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Platform {
+  steam
+  epic
+  riot
+  ea
+  ubisoft
+}
+
+enum SyncStatus {
+  idle
+  syncing
+  synced
+  failed
+}
+
+enum LfgStatus {
+  open
+  filled
+  expired
+  cancelled
+}
+
+enum SocialStatus {
+  pending
+  accepted
+  declined
+  blocked
+}
+
+enum RoomType {
+  direct
+  group
+  game_hub
+  lfg_party
+}
+
+model User {
+  id                String             @id @default(uuid())
+  email             String             @unique
+  username          String             @unique
+  displayName       String
+  passwordHash      String
+  avatarUrl         String?
+  bio               String?
+  region            String?
+  timezone          String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  deletedAt         DateTime?
+  privacy           UserPrivacy?
+  devices           Device[]
+  refreshSessions   RefreshSession[]
+  platformAccounts  PlatformAccount[]
+  libraryItems      LibraryItem[]
+  userAchievements  UserAchievement[]
+  sentEdges         SocialEdge[]       @relation("SocialRequester")
+  receivedEdges     SocialEdge[]       @relation("SocialAddressee")
+  blocksCreated     Block[]            @relation("Blocker")
+  blocksReceived    Block[]            @relation("Blocked")
+  roomsCreated      Room[]             @relation("RoomCreator")
+  roomMembers       RoomMember[]
+  messages          Message[]
+  receipts          MessageReceipt[]
+  lfgPosts          LfgPost[]
+  lfgApplications   LfgApplication[]
+  partiesLed        Party[]            @relation("PartyLeader")
+  partyMembers      PartyMember[]
+  dealWatchlists    DealWatchlist[]
+  notifications     Notification[]
+}
+
+model UserPrivacy {
+  userId                 String   @id
+  profileVisibility      String   @default("friends")
+  libraryVisibility      String   @default("friends")
+  achievementsVisibility String   @default("friends")
+  lfgVisibility          String   @default("public")
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Device {
+  id        String   @id @default(uuid())
+  userId    String
+  platform  String
+  pushToken String?
+  locale    String?
+  appVersion String?
+  lastSeenAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RefreshSession {
+  id         String    @id @default(uuid())
+  userId     String
+  tokenHash  String
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PlatformAccount {
+  id             String        @id @default(uuid())
+  userId         String
+  platform       Platform
+  externalUserId String
+  handle         String
+  avatarUrl      String?
+  profileUrl     String?
+  visibility     String        @default("friends")
+  scopes         String[]      @default([])
+  tokenRef       String?
+  linkedAt       DateTime      @default(now())
+  lastSyncAt     DateTime?
+  syncStatus     SyncStatus    @default(idle)
+  metadataJson   Json          @default("{}")
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  syncJobs       SyncJob[]
+  libraryItems   LibraryItem[]
+  userAchievements UserAchievement[]
+  platformFriends PlatformFriendEdge[]
+
+  @@unique([platform, externalUserId])
+  @@index([userId])
+}
+
+model SyncJob {
+  id                String          @id @default(uuid())
+  platformAccountId String
+  jobType           String
+  status            SyncStatus      @default(idle)
+  cursor            String?
+  retryCount        Int             @default(0)
+  startedAt         DateTime?
+  finishedAt        DateTime?
+  platformAccount   PlatformAccount @relation(fields: [platformAccountId], references: [id], onDelete: Cascade)
+}
+
+model Game {
+  id                 String          @id @default(uuid())
+  slug               String          @unique
+  title              String
+  normalizedTitle    String
+  coverUrl           String?
+  releaseDate        DateTime?
+  genres             String[]        @default([])
+  modes              String[]        @default([])
+  crossplayPlatforms Platform[]      @default([])
+  externalIds        GameExternalId[]
+  libraryItems       LibraryItem[]
+  achievements       Achievement[]
+  lfgPosts           LfgPost[]
+  priceOffers        PriceOffer[]
+  priceSnapshots     PriceSnapshot[]
+  dealWatchlists     DealWatchlist[]
+}
+
+model GameExternalId {
+  id         String   @id @default(uuid())
+  gameId     String
+  platform   Platform
+  externalId String
+  storeUrl   String?
+  confidence Float    @default(1)
+  game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([platform, externalId])
+  @@index([gameId])
+}
+
+model LibraryItem {
+  id                String          @id @default(uuid())
+  userId            String
+  platformAccountId String
+  gameId            String
+  platform          Platform
+  ownershipType     String          @default("owned")
+  playtimeMinutes   Int             @default(0)
+  lastPlayedAt      DateTime?
+  firstSeenAt       DateTime        @default(now())
+  sourceVisibility  String          @default("private")
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platformAccount   PlatformAccount @relation(fields: [platformAccountId], references: [id], onDelete: Cascade)
+  game              Game            @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platformAccountId, gameId, platform])
+  @@index([userId, platform])
+}
+
+model Achievement {
+  id            String            @id @default(uuid())
+  gameId        String
+  platform      Platform
+  externalId    String
+  name          String
+  description   String?
+  iconUrl       String?
+  hidden        Boolean           @default(false)
+  rarityPercent Float?
+  game          Game              @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  userUnlocks   UserAchievement[]
+
+  @@unique([gameId, platform, externalId])
+}
+
+model UserAchievement {
+  id                String          @id @default(uuid())
+  userId            String
+  platformAccountId String
+  achievementId     String
+  unlockedAt        DateTime?
+  progress          Float           @default(0)
+  metadataJson      Json            @default("{}")
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platformAccount   PlatformAccount @relation(fields: [platformAccountId], references: [id], onDelete: Cascade)
+  achievement       Achievement     @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platformAccountId, achievementId])
+}
+
+model SocialEdge {
+  id               String       @id @default(uuid())
+  requesterUserId  String
+  addresseeUserId  String
+  status           SocialStatus @default(pending)
+  source           String       @default("fylex")
+  createdAt        DateTime     @default(now())
+  requester        User         @relation("SocialRequester", fields: [requesterUserId], references: [id], onDelete: Cascade)
+  addressee        User         @relation("SocialAddressee", fields: [addresseeUserId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterUserId, addresseeUserId])
+}
+
+model PlatformFriendEdge {
+  id                String          @id @default(uuid())
+  platformAccountId String
+  platform          Platform
+  externalFriendId  String
+  relationship      String          @default("friend")
+  friendSince       DateTime?
+  platformAccount   PlatformAccount @relation(fields: [platformAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([platformAccountId, platform, externalFriendId])
+}
+
+model Block {
+  id            String   @id @default(uuid())
+  blockerUserId String
+  blockedUserId String
+  reason        String?
+  createdAt     DateTime @default(now())
+  blocker       User     @relation("Blocker", fields: [blockerUserId], references: [id], onDelete: Cascade)
+  blocked       User     @relation("Blocked", fields: [blockedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerUserId, blockedUserId])
+}
+
+model Room {
+  id          String       @id @default(uuid())
+  type        RoomType
+  gameId      String?
+  title       String?
+  visibility  String       @default("private")
+  createdById String
+  createdAt   DateTime     @default(now())
+  createdBy   User         @relation("RoomCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  members     RoomMember[]
+  messages    Message[]
+}
+
+model RoomMember {
+  roomId     String
+  userId     String
+  role       String    @default("member")
+  joinedAt   DateTime  @default(now())
+  mutedUntil DateTime?
+  room       Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([roomId, userId])
+}
+
+model Message {
+  id             String           @id @default(uuid())
+  roomId         String
+  senderId       String
+  body           String
+  attachmentJson Json             @default("{}")
+  replyToId      String?
+  createdAt      DateTime         @default(now())
+  editedAt       DateTime?
+  deletedAt      DateTime?
+  room           Room             @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender         User             @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  receipts       MessageReceipt[]
+
+  @@index([roomId, createdAt])
+}
+
+model MessageReceipt {
+  messageId   String
+  userId      String
+  deliveredAt DateTime?
+  readAt      DateTime?
+  message     Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId])
+}
+
+model LfgPost {
+  id             String           @id @default(uuid())
+  creatorId      String
+  gameId         String
+  platform       Platform
+  region         String
+  language       String
+  skillBand      String
+  rolesNeeded    String[]         @default([])
+  playstyleTags  String[]         @default([])
+  startsAt       DateTime
+  expiresAt      DateTime
+  status         LfgStatus        @default(open)
+  creator        User             @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  game           Game             @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  applications   LfgApplication[]
+
+  @@index([gameId, region, startsAt])
+}
+
+model LfgApplication {
+  id        String   @id @default(uuid())
+  lfgPostId String
+  userId    String
+  message   String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  lfgPost   LfgPost  @relation(fields: [lfgPostId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Party {
+  id          String        @id @default(uuid())
+  gameId      String
+  leaderId    String
+  status      String        @default("forming")
+  voiceRoomId String?
+  createdAt   DateTime      @default(now())
+  leader      User          @relation("PartyLeader", fields: [leaderId], references: [id], onDelete: Cascade)
+  members     PartyMember[]
+}
+
+model PartyMember {
+  partyId  String
+  userId   String
+  role     String?
+  joinedAt DateTime @default(now())
+  party    Party    @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([partyId, userId])
+}
+
+model PriceOffer {
+  id              String   @id @default(uuid())
+  gameId          String
+  platformStore   String
+  country         String
+  currency        String
+  regularPrice    Decimal  @db.Decimal(10, 2)
+  salePrice       Decimal  @db.Decimal(10, 2)
+  discountPercent Int
+  url             String
+  startsAt        DateTime?
+  endsAt          DateTime?
+  fetchedAt       DateTime @default(now())
+  game            Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([gameId, platformStore, country])
+}
+
+model PriceSnapshot {
+  id              String   @id @default(uuid())
+  gameId          String
+  platformStore   String
+  currency        String
+  price           Decimal  @db.Decimal(10, 2)
+  discountPercent Int
+  capturedAt      DateTime @default(now())
+  game            Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+}
+
+model DealWatchlist {
+  id             String  @id @default(uuid())
+  userId         String
+  gameId         String
+  targetPrice    Decimal? @db.Decimal(10, 2)
+  targetDiscount Int?
+  platformsJson  Json    @default("[]")
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game           Game    @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameId])
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  payloadJson Json    @default("{}")
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
