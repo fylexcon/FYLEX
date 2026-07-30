@@ -1,6 +1,8 @@
 import type { PropsWithChildren } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView as BaseSafeAreaView } from 'react-native-safe-area-context';
+
+const SafeAreaView = BaseSafeAreaView as unknown as typeof View;
 import { colors, spacing } from '@/theme';
 
 type ScreenProps = PropsWithChildren<{

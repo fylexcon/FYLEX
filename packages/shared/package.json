@@ -1,17 +1,17 @@
 {
-  "name": "@fylex/shared",
-  "version": "0.1.0",
-  "private": true,
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "echo \"No shared tests yet\""
-  },
-  "dependencies": {
-    "zod": "^3.25.0"
-  },
-  "devDependencies": {
-    "typescript": "^5.8.0"
-  }
+    "name":  "@fylex/shared",
+    "version":  "0.1.0",
+    "private":  true,
+    "main":  "dist/index.js",
+    "types":  "dist/index.d.ts",
+    "scripts":  {
+                    "build":  "tsc -p tsconfig.json",
+                    "test":  "echo \"No shared tests yet\""
+                },
+    "dependencies":  {
+                         "zod":  "^3.25.0"
+                     },
+    "devDependencies":  {
+                            "typescript":  "^5.8.0"
+                        }
 }

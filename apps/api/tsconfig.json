@@ -1,14 +1,27 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "strictPropertyInitialization": false,
-    "sourceMap": true
-  },
-  "include": [
-    "src"
-  ]
+    "extends":  "../../tsconfig.base.json",
+    "compilerOptions":  {
+                            "outDir":  "dist",
+                            "rootDir":  "src",
+                            "experimentalDecorators":  true,
+                            "emitDecoratorMetadata":  true,
+                            "strictPropertyInitialization":  false,
+                            "sourceMap":  true,
+                            "typeRoots":  [
+                                              "../../node_modules/@types",
+                                              "./node_modules/@types"
+                                          ],
+                            "baseUrl":  ".",
+                            "paths":  {
+                                          "@fylex/shared":  [
+                                                                "../../packages/shared/dist/index.d.ts"
+                                                            ],
+                                          "@fylex/shared/*":  [
+                                                                  "../../packages/shared/dist/*"
+                                                              ]
+                                      }
+                        },
+    "include":  [
+                    "src"
+                ]
 }

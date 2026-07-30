@@ -1,25 +1,31 @@
 {
-  "name": "fylex",
-  "version": "0.1.0",
-  "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "scripts": {
-    "dev": "npm run dev --workspace @fylex/api",
-    "dev:api": "npm run dev --workspace @fylex/api",
-    "dev:mobile": "npm run dev --workspace @fylex/mobile",
-    "build": "npm run build --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present",
-    "db:generate": "npm run db:generate --workspace @fylex/api",
-    "db:migrate": "npm run db:migrate --workspace @fylex/api",
-    "db:studio": "npm run db:studio --workspace @fylex/api",
-    "docker:up": "docker compose -f infra/docker-compose.yml up -d",
-    "docker:down": "docker compose -f infra/docker-compose.yml down"
-  },
-  "engines": {
-    "node": ">=20"
-  }
+    "name":  "fylex",
+    "version":  "0.1.0",
+    "private":  true,
+    "workspaces":  [
+                       "apps/*",
+                       "packages/*"
+                   ],
+    "scripts":  {
+                    "dev":  "npm run dev --workspace @fylex/api",
+                    "dev:api":  "npm run dev --workspace @fylex/api",
+                    "dev:mobile":  "npm run dev --workspace @fylex/mobile",
+                    "build":  "npm run build --workspaces --if-present",
+                    "test":  "npm run test --workspaces --if-present",
+                    "lint":  "npm run lint --workspaces --if-present",
+                    "db:generate":  "npm run db:generate --workspace @fylex/api",
+                    "db:migrate":  "npm run db:migrate --workspace @fylex/api",
+                    "db:studio":  "npm run db:studio --workspace @fylex/api",
+                    "docker:up":  "docker compose -f infra/docker-compose.yml up -d",
+                    "docker:down":  "docker compose -f infra/docker-compose.yml down",
+                    "release:check":  "npm run build --workspace @fylex/shared; npm run db:generate --workspace @fylex/api; npm run build --workspace @fylex/api; npm run lint --workspace @fylex/mobile"
+                },
+    "engines":  {
+                    "node":  "\u003e=20"
+                },
+    "devDependencies":  {
+                            "effect":  "^3.22.1",
+                            "lodash":  "^4.18.1",
+                            "rxjs":  "^7.8.2"
+                        }
 }
