@@ -18,7 +18,8 @@
                     "db:studio":  "npm run db:studio --workspace @fylex/api",
                     "docker:up":  "docker compose -f infra/docker-compose.yml up -d",
                     "docker:down":  "docker compose -f infra/docker-compose.yml down",
-                    "release:check":  "npm run build --workspace @fylex/shared; npm run db:generate --workspace @fylex/api; npm run build --workspace @fylex/api; npm run lint --workspace @fylex/mobile"
+                    "release:check":  "npm run build --workspace @fylex/shared; npm run db:generate --workspace @fylex/api; npm run build --workspace @fylex/api; npm run lint --workspace @fylex/mobile",
+                    "vercel-build":  "npm run build --workspace @fylex/shared \u0026\u0026 npm run db:generate --workspace @fylex/api \u0026\u0026 npm run build --workspace @fylex/api"
                 },
     "engines":  {
                     "node":  "\u003e=20"
