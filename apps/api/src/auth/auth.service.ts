@@ -101,7 +101,7 @@ export class AuthService {
       },
       {
         secret: this.config.get<string>('JWT_ACCESS_SECRET') ?? 'dev-access-secret',
-        expiresIn: this.config.get<string>('ACCESS_TOKEN_TTL') ?? '15m'
+        expiresIn: (this.config.get<string>('ACCESS_TOKEN_TTL') ?? '15m') as any
       }
     );
     const refreshToken = `${randomUUID()}.${randomUUID()}`;

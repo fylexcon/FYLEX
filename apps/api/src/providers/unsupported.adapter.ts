@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import type { Platform } from '@fylex/shared';
-import type { ProviderAccountRef, ProviderAdapter } from './provider.types';
+import type { ProviderAccountRef, ProviderAchievement, ProviderAdapter, ProviderFriend, ProviderGame } from './provider.types';
 
 @Injectable()
 export class UnsupportedProviderAdapter implements ProviderAdapter {
@@ -17,15 +17,15 @@ export class UnsupportedProviderAdapter implements ProviderAdapter {
     };
   }
 
-  async getOwnedGames() {
+  async getOwnedGames(_account: ProviderAccountRef): Promise<ProviderGame[]> {
     throw new BadRequestException(`${this.platform} sync requires official partner API access`);
   }
 
-  async getAchievements() {
+  async getAchievements(_account: ProviderAccountRef, _externalGameId: string): Promise<ProviderAchievement[]> {
     throw new BadRequestException(`${this.platform} achievements require official partner API access`);
   }
 
-  async getFriends() {
+  async getFriends(_account: ProviderAccountRef): Promise<ProviderFriend[]> {
     throw new BadRequestException(`${this.platform} friends require official partner API access`);
   }
 }
